@@ -1,0 +1,13 @@
+# -------------------------------- dev-环境 -----------------------------------
+
+# 设置当前服务名称
+spring:
+  application:
+    name: CompareTool-server
+
+
+# 设置启动端口号、路径前缀
+server:
+  port: 8899
+  servlet:
+    context-path: /api
