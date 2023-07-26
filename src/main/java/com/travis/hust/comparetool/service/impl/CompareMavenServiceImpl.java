@@ -201,7 +201,7 @@ public class CompareMavenServiceImpl {
         compareResult.setSameClassNumber(sameNumber);
         compareResult.setMissingClassNumber(missingClassSet.size());
         compareResult.setDifferentClassNumber(jarClassSum - sameNumber - missingClassSet.size());
-
+        
         return R.success(compareResult);
     }
 }

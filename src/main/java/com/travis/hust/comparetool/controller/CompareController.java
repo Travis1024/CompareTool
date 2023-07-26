@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.io.File;
 import java.util.List;
 
@@ -42,15 +41,12 @@ public class CompareController {
                 rootPath = rootPath.substring(0, rootPath.length() - 1);
             }
 
-
             // 二、判断 项目 使用的编译工具
             if (FileUtil.exist(rootPath + File.separator + BuildToolType.MAVEN.getFileName())) {
                 return compareService.compareClassFile(rootPath, jarPathList, BuildToolType.MAVEN);
             } else if (FileUtil.exist(rootPath + File.separator + BuildToolType.GRADLE.getFileName())) {
                 return compareService.compareClassFile(rootPath, jarPathList, BuildToolType.GRADLE);
             }
-
-
 
             return R.error(BizCodeEnum.BAD_REQUEST, "未检测到项目源代码的编译配置文件！");
 
