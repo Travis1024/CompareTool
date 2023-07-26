@@ -23,11 +23,11 @@ import java.util.jar.JarFile;
  * @Data 2023/7/25
  */
 
-@Service("compareMavenService")
+// @Service("compareMavenService")
 @Slf4j
-public class CompareMavenServiceImpl implements CompareService {
+@Deprecated
+public class CompareMavenServiceImpl {
 
-    @Override
     public R<?> compareClassFile(String rootPath, List<String> jarPathList) throws IOException {
 
         /**

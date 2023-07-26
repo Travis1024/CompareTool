@@ -15,10 +15,10 @@ import java.util.List;
  * @Data 2023/7/25
  */
 
-@Service("compareGradleService")
+// @Service("compareGradleService")
 @Slf4j
-public class CompareGradleServiceImpl implements CompareService {
-    @Override
+@Deprecated
+public class CompareGradleServiceImpl {
     public R<?> compareClassFile(String rootPath, List<String> jarPathList) {
         return null;
     }
