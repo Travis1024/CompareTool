@@ -127,6 +127,8 @@ public class CompareMavenServiceImpl implements CompareService {
         Map<String, List<String>> jarClassMap = new HashMap<>();
         int jarClassSum = 0;
 
+        String prefix = "BOOT-INF" + File.separator + "classes";
+
         for (String oneJarPath : jarPathList) {
             // 判断传入的 jar 包是否存在
             if (!FileUtil.exist(oneJarPath)) continue;
@@ -135,11 +137,17 @@ public class CompareMavenServiceImpl implements CompareService {
             Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
                 JarEntry jarEntry = entries.nextElement();
-                if (!jarEntry.isDirectory() && jarEntry.getName().endsWith(".class")) {
+                if (!jarEntry.isDirectory() && jarEntry.getName().startsWith(prefix) && jarEntry.getName().endsWith(".class")) {
                     // 计数+1
                     jarClassSum++;
-                    // 获取 class 文件名
+
+                    // 获取 class 文件名, 需要处理前缀
                     String jarEntryName = jarEntry.getName();
+                    int lastFlagIndex = jarEntryName.lastIndexOf(File.separator);
+                    if (lastFlagIndex != -1) {
+                        jarEntryName = jarEntryName.substring(lastFlagIndex + 1);
+                    }
+
                     InputStream inputStream = jarFile.getInputStream(jarEntry);
                     // 计算文件 md5 值
                     String md5Hex = DigestUtil.md5Hex(inputStream);
