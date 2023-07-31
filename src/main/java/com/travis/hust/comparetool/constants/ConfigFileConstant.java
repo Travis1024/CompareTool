@@ -2,7 +2,7 @@ package com.travis.hust.comparetool.constants;
 
 /**
  * @ClassName ConfigFileNameConstant
- * @Description TODO
+ * @Description 配置文件名称常量类
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/7/25

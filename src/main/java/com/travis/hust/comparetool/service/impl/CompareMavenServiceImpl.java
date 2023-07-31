@@ -17,7 +17,7 @@ import java.util.jar.JarFile;
 
 /**
  * @ClassName CompareServiceImpl
- * @Description TODO
+ * @Description 已弃用
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/7/25
@@ -201,7 +201,7 @@ public class CompareMavenServiceImpl {
         compareResult.setSameClassNumber(sameNumber);
         compareResult.setMissingClassNumber(missingClassSet.size());
         compareResult.setDifferentClassNumber(jarClassSum - sameNumber - missingClassSet.size());
-        
+
         return R.success(compareResult);
     }
 }

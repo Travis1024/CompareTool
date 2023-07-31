@@ -7,7 +7,7 @@ import java.util.Set;
 
 /**
  * @ClassName CompareResult
- * @Description TODO
+ * @Description 比较结果封装
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/7/25

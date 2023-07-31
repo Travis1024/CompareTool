@@ -18,7 +18,7 @@ import java.util.jar.JarFile;
 
 /**
  * @ClassName CompareServiceImpl
- * @Description TODO
+ * @Description 业务实现类
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/7/26
@@ -107,6 +107,7 @@ public class CompareServiceImpl implements CompareService {
         Deque<String> deque = new LinkedList<>();
 
         while ((line = reader.readLine()) != null) {
+            // TODO 向页面 WebSocket 发送数据
             System.out.println(line);
             // 保留最后 10 行输出
             if (deque.size() >= 10) {
@@ -144,6 +145,7 @@ public class CompareServiceImpl implements CompareService {
         Deque<String> deque = new LinkedList<>();
 
         while ((line = bufferedReader.readLine()) != null) {
+            // TODO 向页面 WebSocket 发送数据
             System.out.println(line);
             // 保留最后 10 行输出
             if (deque.size() >= 10) {
