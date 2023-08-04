@@ -8,6 +8,7 @@ import com.travis.hust.comparetool.enums.BuildToolType;
 import com.travis.hust.comparetool.pojo.dto.CompareResult;
 import com.travis.hust.comparetool.service.CompareService;
 import com.travis.hust.comparetool.utils.R;
+import com.travis.hust.comparetool.websocket.BuildProcessWebsocket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -28,23 +29,25 @@ import java.util.jar.JarFile;
 public class CompareServiceImpl implements CompareService {
 
     @Override
-    public R<?> compareClassFile(String rootPath, List<String> jarPathList, BuildToolType buildToolType) throws IOException {
+    public R<?> compareClassFile(String rootPath, List<String> jarPathList, String uuid, BuildToolType buildToolType) throws IOException {
         /**
-         * 0: 准备工作：mvn clean
+         * 一、 准备工作：mvn clean
          */
-        if (BuildToolType.MAVEN.equals(buildToolType)) clean("mvn clean -f " + rootPath);
-        else if (BuildToolType.GRADLE.equals(buildToolType)) clean("gradle clean -p " + rootPath);
+        if (BuildToolType.MAVEN.equals(buildToolType)) clean("mvn clean -f " + rootPath, uuid);
+        else if (BuildToolType.GRADLE.equals(buildToolType)) clean("gradle clean -p " + rootPath, uuid);
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-1 ] --> Clean Successful! ");
         log.info("-------------- [ Clean Successful! ]");
 
         /**
-         * 一、发送编译命令（起 websocket 实时返回编译结果）
+         * 二、发送编译命令（起 websocket 实时返回编译结果）
          */
-        if (BuildToolType.MAVEN.equals(buildToolType)) build("mvn compile -f " + rootPath);
-        else if (BuildToolType.GRADLE.equals(buildToolType)) build("gradle build -p " + rootPath);
+        if (BuildToolType.MAVEN.equals(buildToolType)) build("mvn compile -f " + rootPath, uuid);
+        else if (BuildToolType.GRADLE.equals(buildToolType)) build("gradle build -p " + rootPath, uuid);
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-2 ] --> Compile Successful! ");
         log.info("-------------- [ Compile Successful! ]");
 
         /**
-         * 二、进 target 文件计算 class 文件 md5 值
+         * 三、进 target 文件计算 class 文件 md5 值
          */
         Map<String, List<String>> targetClassMap = new HashMap<>();
         String classPath = null;
@@ -54,25 +57,28 @@ public class CompareServiceImpl implements CompareService {
             classPath = rootPath + File.separator + "build" + File.separator + "classes";
         }
         int targetClassSum = calcTargetClassMD5(classPath, targetClassMap);
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-3 ] --> Calc Target Class Files MD5 Successful! ");
         log.info("-------------- [ Calc Target Class Files MD5 Successful! ]");
 
         /**
-         * 三、解压 所有 jar 包，计算 jar 包下的 class 文件 md5 值
+         * 四、解压 所有 jar 包，计算 jar 包下的 class 文件 md5 值
          */
         Map<String, List<String>> jarClassMap = new HashMap<>();
         int jarClassSum = calcJarClassMD5(jarPathList, jarClassMap);
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-4 ] --> Calc Jar Class Files MD5 Successful! ");
         log.info("-------------- [ Calc Jar Class Files MD5 Successful! ]");
 
         /**
-         * 四、对比两个 map 所有文件的 md5 值
+         * 五、对比两个 map 所有文件的 md5 值
          */
         Set<String> missingClassSet = new HashSet<>();
         Set<String> differentClassSet = new HashSet<>();
         int sameNumber = compare(jarClassMap, targetClassMap, missingClassSet, differentClassSet);
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-5 ] --> Compare MD5 Successful! ");
         log.info("-------------- [ Compare MD5 Successful! ]");
 
         /**
-         * 五、封装对比结果
+         * 六、封装对比结果
          */
         CompareResult compareResult = new CompareResult();
         compareResult.setMissingClassSet(missingClassSet);
@@ -84,6 +90,7 @@ public class CompareServiceImpl implements CompareService {
         compareResult.setSameClassNumber(sameNumber);
         compareResult.setMissingClassNumber(missingClassSet.size());
         compareResult.setDifferentClassNumber(jarClassSum - sameNumber - missingClassSet.size());
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-6 ] --> Package Result Successful! ");
         log.info("-------------- [ Package Result Successful! ]");
 
         return R.success(compareResult);
@@ -97,7 +104,7 @@ public class CompareServiceImpl implements CompareService {
      * @param command
      * @Return void
      **/
-    private void clean (String command) throws IOException {
+    private void clean (String command, String uuid) throws IOException {
         Process execkedClean = RuntimeUtil.exec(command);
         BufferedReader reader = new BufferedReader(new InputStreamReader(execkedClean.getInputStream()));
 
@@ -107,8 +114,9 @@ public class CompareServiceImpl implements CompareService {
         Deque<String> deque = new LinkedList<>();
 
         while ((line = reader.readLine()) != null) {
-            // TODO 向页面 WebSocket 发送数据
-            System.out.println(line);
+            // 向页面 WebSocket 发送数据
+            BuildProcessWebsocket.sendMessage(uuid, line);
+            // System.out.println(line);
             // 保留最后 10 行输出
             if (deque.size() >= 10) {
                 deque.removeFirst();
@@ -135,7 +143,7 @@ public class CompareServiceImpl implements CompareService {
      * @param command
      * @Return void
      **/
-    private void build (String command) throws IOException {
+    private void build (String command, String uuid) throws IOException {
         Process execked = RuntimeUtil.exec(command);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(execked.getInputStream()));
 
@@ -145,8 +153,9 @@ public class CompareServiceImpl implements CompareService {
         Deque<String> deque = new LinkedList<>();
 
         while ((line = bufferedReader.readLine()) != null) {
-            // TODO 向页面 WebSocket 发送数据
-            System.out.println(line);
+            // 向页面 WebSocket 发送数据
+            BuildProcessWebsocket.sendMessage(uuid, line);
+            // System.out.println(line);
             // 保留最后 10 行输出
             if (deque.size() >= 10) {
                 deque.removeFirst();

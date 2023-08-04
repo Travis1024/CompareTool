@@ -63,7 +63,7 @@ public class BuildProcessWebsocket {
         log.error(throwable.toString());
     }
 
-    private static Session getSession(String wbUuid) {
+    public static Session getSession(String wbUuid) {
         try {
             Session sessionNow = sessionPool.get(wbUuid);
             if (sessionNow != null && sessionNow.isOpen()) return sessionNow;
@@ -73,11 +73,11 @@ public class BuildProcessWebsocket {
         return null;
     }
 
-    private static void sendMessage(String wbUuid, String message) {
+    public static void sendMessage(String wbUuid, String message) {
         Session sessionNow = sessionPool.get(wbUuid);
         if (sessionNow != null && sessionNow.isOpen()) {
             try {
-                log.info("[WebSocket Send-Message] 向页面 " + wbUuid + " 发送消息: " + message);
+                log.info("[WebSocket Send-Message] - " + wbUuid + " : " + message);
                 sessionNow.getAsyncRemote().sendText(message);
             } catch (Exception e) {
                 log.error("[WebSocket Error] " + e);

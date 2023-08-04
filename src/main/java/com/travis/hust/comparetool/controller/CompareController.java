@@ -33,7 +33,7 @@ public class CompareController {
     private CompareService compareService;
 
     @PostMapping("/compare")
-    public R<?> compareClassFile(@RequestParam("rootPath") String rootPath, @RequestParam("jarPathList") List<String> jarPathList) {
+    public R<?> compareClassFile(@RequestParam("rootPath") String rootPath, @RequestParam("jarPathList") List<String> jarPathList, @RequestParam("uuid") String uuid) {
         try {
             // 一、处理 项目 根路径地址
             rootPath = rootPath.trim();
@@ -43,9 +43,9 @@ public class CompareController {
 
             // 二、判断 项目 使用的编译工具
             if (FileUtil.exist(rootPath + File.separator + BuildToolType.MAVEN.getFileName())) {
-                return compareService.compareClassFile(rootPath, jarPathList, BuildToolType.MAVEN);
+                return compareService.compareClassFile(rootPath, jarPathList, uuid, BuildToolType.MAVEN);
             } else if (FileUtil.exist(rootPath + File.separator + BuildToolType.GRADLE.getFileName())) {
-                return compareService.compareClassFile(rootPath, jarPathList, BuildToolType.GRADLE);
+                return compareService.compareClassFile(rootPath, jarPathList, uuid, BuildToolType.GRADLE);
             }
 
             return R.error(BizCodeEnum.BAD_REQUEST, "未检测到项目源代码的编译配置文件！");

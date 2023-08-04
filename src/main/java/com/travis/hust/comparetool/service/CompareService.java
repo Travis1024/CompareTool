@@ -8,11 +8,11 @@ import java.util.List;
 
 /**
  * @ClassName CompareService
- * @Description TODO
+ * @Description 对比服务接口
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/7/25
  */
 public interface CompareService {
-    R<?> compareClassFile(String rootPath, List<String> jarPathList, BuildToolType buildToolType) throws IOException;
+    R<?> compareClassFile(String rootPath, List<String> jarPathList, String uuid, BuildToolType buildToolType) throws IOException;
 }

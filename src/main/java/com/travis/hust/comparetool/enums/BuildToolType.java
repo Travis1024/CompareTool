@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * @ClassName BuildToolType
- * @Description TODO
+ * @Description 编译工具类型
  * @Author travis-wei
  * @Version v1.0
  * @Data 2023/7/26
