@@ -3,7 +3,6 @@ package com.travis.hust.comparetool.service.impl;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RuntimeUtil;
 import cn.hutool.crypto.digest.DigestUtil;
-import com.travis.hust.comparetool.enums.BizCodeEnum;
 import com.travis.hust.comparetool.enums.BuildToolType;
 import com.travis.hust.comparetool.pojo.dto.CompareResult;
 import com.travis.hust.comparetool.service.CompareService;
@@ -33,22 +32,25 @@ public class CompareServiceImpl implements CompareService {
         /**
          * 一、 准备工作：mvn clean
          */
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-1 ] --> Clean Task Running...");
         if (BuildToolType.MAVEN.equals(buildToolType)) clean("mvn clean -f " + rootPath, uuid);
         else if (BuildToolType.GRADLE.equals(buildToolType)) clean("gradle clean -p " + rootPath, uuid);
         BuildProcessWebsocket.sendMessage(uuid, "[ Step-1 ] --> Clean Successful! ");
-        log.info("-------------- [ Clean Successful! ]");
+        // log.info("-------------- [ Clean Successful! ]");
 
         /**
          * 二、发送编译命令（起 websocket 实时返回编译结果）
          */
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-2 ] --> Compile Task Running...");
         if (BuildToolType.MAVEN.equals(buildToolType)) build("mvn compile -f " + rootPath, uuid);
         else if (BuildToolType.GRADLE.equals(buildToolType)) build("gradle build -p " + rootPath, uuid);
         BuildProcessWebsocket.sendMessage(uuid, "[ Step-2 ] --> Compile Successful! ");
-        log.info("-------------- [ Compile Successful! ]");
+        // log.info("-------------- [ Compile Successful! ]");
 
         /**
          * 三、进 target 文件计算 class 文件 md5 值
          */
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-3 ] --> Calc Target Class Files MD5 Task Running...");
         Map<String, List<String>> targetClassMap = new HashMap<>();
         String classPath = null;
         if (BuildToolType.MAVEN.equals(buildToolType)) {
@@ -58,28 +60,31 @@ public class CompareServiceImpl implements CompareService {
         }
         int targetClassSum = calcTargetClassMD5(classPath, targetClassMap);
         BuildProcessWebsocket.sendMessage(uuid, "[ Step-3 ] --> Calc Target Class Files MD5 Successful! ");
-        log.info("-------------- [ Calc Target Class Files MD5 Successful! ]");
+        // log.info("-------------- [ Calc Target Class Files MD5 Successful! ]");
 
         /**
          * 四、解压 所有 jar 包，计算 jar 包下的 class 文件 md5 值
          */
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-4 ] --> Calc Jar Class Files MD5 Task Running...");
         Map<String, List<String>> jarClassMap = new HashMap<>();
-        int jarClassSum = calcJarClassMD5(jarPathList, jarClassMap);
+        int jarClassSum = calcJarClassMD5(jarPathList, jarClassMap, uuid);
         BuildProcessWebsocket.sendMessage(uuid, "[ Step-4 ] --> Calc Jar Class Files MD5 Successful! ");
-        log.info("-------------- [ Calc Jar Class Files MD5 Successful! ]");
+        // log.info("-------------- [ Calc Jar Class Files MD5 Successful! ]");
 
         /**
          * 五、对比两个 map 所有文件的 md5 值
          */
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-5 ] --> Compare MD5 Task Running...");
         Set<String> missingClassSet = new HashSet<>();
         Set<String> differentClassSet = new HashSet<>();
         int sameNumber = compare(jarClassMap, targetClassMap, missingClassSet, differentClassSet);
         BuildProcessWebsocket.sendMessage(uuid, "[ Step-5 ] --> Compare MD5 Successful! ");
-        log.info("-------------- [ Compare MD5 Successful! ]");
+        // log.info("-------------- [ Compare MD5 Successful! ]");
 
         /**
          * 六、封装对比结果
          */
+        BuildProcessWebsocket.sendMessage(uuid, "[ Step-6 ] --> Package Result Task Running...");
         CompareResult compareResult = new CompareResult();
         compareResult.setMissingClassSet(missingClassSet);
         compareResult.setDifferentClassSet(differentClassSet);
@@ -91,7 +96,7 @@ public class CompareServiceImpl implements CompareService {
         compareResult.setMissingClassNumber(missingClassSet.size());
         compareResult.setDifferentClassNumber(jarClassSum - sameNumber - missingClassSet.size());
         BuildProcessWebsocket.sendMessage(uuid, "[ Step-6 ] --> Package Result Successful! ");
-        log.info("-------------- [ Package Result Successful! ]");
+        // log.info("-------------- [ Package Result Successful! ]");
 
         return R.success(compareResult);
     }
@@ -218,14 +223,17 @@ public class CompareServiceImpl implements CompareService {
      * @param jarClassMap
      * @Return int
      **/
-    private int calcJarClassMD5(List<String> jarPathList, Map<String, List<String>> jarClassMap) throws IOException {
+    private int calcJarClassMD5(List<String> jarPathList, Map<String, List<String>> jarClassMap, String uuid) throws IOException {
         int jarClassSum = 0;
 
         String prefix = "BOOT-INF" + File.separator + "classes";
 
         for (String oneJarPath : jarPathList) {
             // 判断传入的 jar 包是否存在
-            if (!FileUtil.exist(oneJarPath)) continue;
+            if (!FileUtil.exist(oneJarPath)) {
+                BuildProcessWebsocket.sendMessage(uuid, "WARNING: " + oneJarPath + " 未找到, 请检查路径信息!");
+                continue;
+            }
 
             JarFile jarFile = new JarFile(oneJarPath);
             Enumeration<JarEntry> entries = jarFile.entries();

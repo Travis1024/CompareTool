@@ -78,7 +78,7 @@ public class BuildProcessWebsocket {
         if (sessionNow != null && sessionNow.isOpen()) {
             try {
                 log.info("[WebSocket Send-Message] - " + wbUuid + " : " + message);
-                sessionNow.getAsyncRemote().sendText(message);
+                sessionNow.getBasicRemote().sendText(message);
             } catch (Exception e) {
                 log.error("[WebSocket Error] " + e);
             }
